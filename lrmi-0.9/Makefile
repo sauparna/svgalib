@@ -1,41 +1,32 @@
-CFLAGS ?= -g -Wall
+CFLAGS = -g -Wall
 
-sources = lrmi.c
-objects = lrmi.o
-all = vbetest mode3 vga_reset vbemodeinfo dosint
+O   = 	bin
 
-%.o: %.c
-	$(CC) -c $(CPPFLAGS) $(CFLAGS) -o $@ $<
+SRC = 	dosint.c 	\
+	mode3.c 	\
+	vbemodeinfo.c 	\
+	vbetest.c 	\
+	vga_reset.c
 
-all: $(all)
+BIN = $(SRC:.c=)
 
-vbetest: vbetest.c lrmi.o
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $^
+all: $(BIN)
 
-mode3: mode3.c lrmi.o
-	$(CC) $(CFLAGS) -o $@ $^
+.c:
+	mkdir -p $(O)
+	$(CC) $(CFLAGS) -o $(O)/$* $*.c lrmi.c
 
-dosint: dosint.c lrmi.o
-	$(CC) $(CFLAGS) -o $@ $^
+install: $(O)/mode3 $(O)/vga_reset
+	install $(O)/mode3 /sbin
+	install $(O)/vga_reset /sbin
 
-vbemodeinfo: vbemodeinfo.c lrmi.o
-	$(CC) $(CFLAGS) -o $@ $^
-
-vga_reset: vga_reset.c lrmi.o
-	$(CC) $(CFLAGS) -o $@ $^
-
-install: mode3 vga_reset
-	install mode3 /sbin
-	install vga_reset /sbin
-
-.PHONY: clean
 clean:
-	rm -f $(objects) $(all) core regs-out *.bak
+	rm -rf $(O) *.o core regs-out *.bak
 
-.PHONY: distclean
 distclean: clean
 	rm -f .depend
 
-.PHONY: depend
 depend: $(sources)
-	-$(CC) -M $(CPPFLAGS) $^ >.depend
+	-$(CC) -M $(CFLAGS) $^ >.depend
+
+.PHONY: clean distclean depend

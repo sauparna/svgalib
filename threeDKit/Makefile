@@ -1,62 +1,37 @@
-#----------------------------------------------------------------------
-# Makefile for threeDKit
-#----------------------------------------------------------------------
-
-# *** NO SERVICIBLE PARTS HERE!
-#     All options are in Makefile.cfg.
-
 include ../Makefile.cfg
 
-srcdir    = ..
-VPATH     = $(srcdir)/src
+ROOT	= ..
+VPATH	= $(ROOT)/src
+SRCDIR	= .
+O	= bin
+OBJDIR  = obj
+LIBDIR  = lib
 
-#----------------------------------------------------------------------
-# Compiler Section (overrides Makefile.cfg)
-#----------------------------------------------------------------------
+SRC 	= 3dinit.c 	\
+	  3dkit.c  	\
+	  quickmath.c 	\
+	  swtriangle.c 	\
+	  triangl.c 	\
+	  triangle.c 	\
+	  wrapsurf.c 	\
+	  wtriangle.c
 
-INCLUDES += -I$(srcdir)/src
+INC    += -I$(ROOT)/src
+OBJ     = $(SRC:.c=.o)
+LDFLAGS	= -lvgagl -lvga -lm
 
-#----------------------------------------------------------------------
-# Rules Section
-#----------------------------------------------------------------------
+%.o: %.c
+	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
-CFILES = 3dinit.c 3dkit.c quickmath.c swtriangle.c triangl.c triangle.c wrapsurf.c wtriangle.c
-OBJECTS = $(CFILES:.c=.o)
-	#
-# Determine what library (static or shared) we will be linking programs with
-ifdef INSTALLSHAREDLIB
-  LIBS = -lm -lvgagl -lvga
-endif
-ifndef LIBS
-  LIBS    = -lm $(srcdir)/staticlib/libvgagl.a $(srcdir)/staticlib/libvga.a
-  LVGADEP = $(srcdir)/staticlib/libvgagl.a $(srcdir)/staticlib/libvga.a
-endif
+all: $(LIBDIR)/lib3dkit.a $(LIBDIR)/lib3dkit.so.$(VERSION) plane wrap
 
-.c.o:
-	$(CC) $(CFLAGS) -c -o $*.o $<
-
-.c.s:
-	$(CC) $(CFLAGS) -S -o $*.s $<
-
-.PHONY:	all clean install installheaders
-
-
-
-ifeq (a.out, $(TARGET_FORMAT))
-
-all:	lib3dkit.a plane wrapdemo
-
-else                                                               
-
-all:	lib3dkit.so.$(VERSION) plane wrapdemo
-
-# These rules are for ELF only.
-lib3dkit.so.$(VERSION): $(OBJECTS)
+$(LIBDIR)/lib3dkit.so.$(VERSION): $(OBJ)
+	mkdir -p $(LIBDIR)
 	$(CC) -shared -Wl,-soname,lib3dkit.so.$(MAJOR_VER) \
-	  -o lib3dkit.so.$(VERSION) $(OBJECTS) -lm
+	  -o $(LIBDIR)/lib3dkit.so.$(VERSION) $(OBJ) -lm
 
-$(sharedlibdir)/lib3dkit.so.$(VERSION): lib3dkit.so.$(VERSION)
-	$(INSTALL_SHLIB) $< $(sharedlibdir)/$<
+$(sharedlibdir)/lib3dkit.so.$(VERSION): $(LIBDIR)/lib3dkit.so.$(VERSION)
+	$(INSTALL_SHLIB) $< $(sharedlibdir)/lib3dkit.so.$(VERSION)
 	(cd $(sharedlibdir); ln -sf lib3dkit.so.$(VERSION) `echo lib3dkit.so.$(VERSION) | sed 's/\.so\..*/.so/'` )
 	-ldconfig
 
@@ -68,24 +43,19 @@ installheaders:
 	@cp triangle.h $(includedir)/triangle.h
 	@chmod a+r $(includedir)/triangle.h
 
-endif	  
+$(LIBDIR)/lib3dkit.a: $(ALLOBJS)
+	mkdir -p $(LIBDIR)
+	$(AR) rcs $(LIBDIR)/lib3dkit.a $(ALLOBJS)
 
+plane: planukit.o planinit.o $(OBJ)
+	mkdir -p $(O)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $(O)/plane planukit.o planinit.o $(OBJ)
 
-lib3dkit.a: $(ALLOBJS)
-	rm -f lib3dkit.a
-	$(AR) rcs lib3dkit.a $(ALLOBJS)
-
-plane: planukit.o planinit.o $(OBJECTS) $(LVGADEP)
-	$(CC) $(LDFLAGS) -o plane planukit.o planinit.o $(OBJECTS) $(LIBS)
-	# chown root plane
-	# chmod u+s plane
-
-wrapdemo: wrapdemo.o $(OBJECTS) $(LVGADEP)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o wrapdemo wrapdemo.c $(OBJECTS) $(LIBS)
-	# chown root wrapdemo
-	# chmod u+s wrapdemo
+wrap: wrapdemo.o $(OBJ)
+	mkdir -p $(O)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $(O)/wrap wrapdemo.o $(OBJ)
 
 clean:
-	rm -f *.o core lib3dkit.a lib3dkit.so.* plane wrapdemo *.bak
+	rm -rf $(O) $(LIBDIR) *.o *.bak core 
 
-
+.PHONY:	all clean install installheaders

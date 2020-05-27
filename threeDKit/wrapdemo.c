@@ -626,5 +626,5 @@ el_getchar ();
 
     EL_cleanup (ellip);
     vga_setmode (TEXT);
-    return;
+    return 0;
 }

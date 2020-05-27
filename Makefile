@@ -130,7 +130,7 @@ installutils: textutils $(LRMI)
 	@$(INSTALL_SCRIPT) utils/savetextmode $(bindir)
 ifeq ($(LRMI),lrmi)
 	@echo "mode3:       Restore textmode by setting VESA mode 3."
-	@$(INSTALL_PROGRAM) lrmi-0.6m/mode3 $(bindir)
+	@$(INSTALL_PROGRAM) lrmi-0.6m/bin/mode3 $(bindir)
 endif
 	@echo "Installing keymap utilities in $(bindir):"
 	@echo "svgakeymap:       Perl script that generates scancode conversion maps."

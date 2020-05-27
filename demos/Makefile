@@ -1,75 +1,59 @@
-#----------------------------------------------------------------------
-# Makefile for SVGAlib demo programs.
-#
-# This file is a part of SVGAlib.
-#----------------------------------------------------------------------
-
 include ../Makefile.cfg
 
-srcdir    = ..
-VPATH     = $(srcdir)/demos
-
-#----------------------------------------------------------------------
-# Compiler Section (overrides Makefile.cfg)
-#----------------------------------------------------------------------
-
-CFLAGS = $(WARN) $(OPTIMIZE) -I$(srcdir)/include -I$(srcdir)/gl $(DEBFLAGS)
+svgalibroot = ..
+VPATH       = $(svgalibroot)/demos.x
+O           = bin
+CFLAGS      = $(WARN) $(OPTIMIZE)
+INCLUDE     = -I$(svgalibroot)/include -I$(svgalibroot)/gl
 ifeq (a.out, $(TARGET_FORMAT))
-  CFLAGS += -DSVGA_AOUT
+  CFLAGS   += -DSVGA_AOUT
 endif
-
-#----------------------------------------------------------------------
-# Rules Section
-#----------------------------------------------------------------------
-
-PROGS    = fun testgl speedtest mousetest vgatest scrolltest testlinear \
-	   keytest testaccel accel forktest eventtest spin bg_test printftest \
-	   joytest mjoytest bankspeed lineart linearspeed addmodetest \
-	   svidtune linearfork cursor vgatweak buildcsr
-
-# Determine what library (static or shared) we will be linking programs with
 ifdef INSTALLSHAREDLIB
-  LIBS = -lvgagl -lvga
+  LIB       = -lvgagl -lvga
 endif
-ifndef LIBS
-  LIBS    = ../staticlib/libvgagl.a ../staticlib/libvga.a -lm
-  LVGADEP = $(LIBS)
+ifndef LIB
+  LIB       = $(svgalibroot)/staticlib/libvgagl.a $(svgalibroot)/staticlib/libvga.a
+  LVGADEP   = $(LIB)
 endif
 
-all:	$(PROGS)
+SRC         = 	accel.c 	\
+		addmodetest.c 	\
+		bankspeed.c 	\
+		bg_test.c 	\
+		cursor.c 	\
+		eventtest.c 	\
+		forktest.c 	\
+		fun.c 		\
+		joytest.c 	\
+		keytest.c 	\
+		linearfork.c 	\
+		linearspeed.c 	\
+		lineart.c 	\
+		mjoytest.c 	\
+		mousetest.c 	\
+		printftest.c 	\
+		scrolltest.c 	\
+		speedtest.c 	\
+		spin.c 		\
+		svidtune.c 	\
+		testaccel.c 	\
+		testgl.c 	\
+		testlinear.c 	\
+		vgatest.c 	\
+		vgatweak.c
 
-.PHONY: all clean cleanbin dep
+BIN = $(SRC:.c=)
 
-$(PROGS): $(LVGADEP)
+all:	$(BIN) buildcsr
 
 .c:
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $* $*.c $(LIBS)
-
-rwpage: rwpage.pp
-	$(PC) -Rintel rwpage.pp
-
-testaccel: testaccel.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -o testaccel testaccel.c $(LIBS) -lm
-
-accel: accel.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -o accel accel.c $(LIBS) -lm
-
-linearspeed: linearspeed.c memset.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o linearspeed linearspeed.c memset.o $(LIBS)
-
+	mkdir -p $(O)
+	$(CC) $(CFLAGS) $(INCLUDE) -o $(O)/$* $*.c $(LDFLAGS) $(LIB)
+   
 buildcsr: mkcur.o
-	$(CC) -o buildcsr $(LDFLAGS) mkcur.o -lvgagl -lvga
+	$(CC) $(CFLAGS) $(INCLUDE) -o $(O)/buildcsr mkcur.o $(LDFLAGS) $(LIB)
 
-clean:	cleanbin
-	rm -f .depend *.o *~ *.bak core
+clean:
+	rm -rf $(O) .depend *.o *~ *.bak
 
-cleanbin:
-	rm -f $(PROGS) rwpage
-
-#
-# No dependencies required here.
-#
-
-dep:
-.depend:
-
+.PHONY: all clean

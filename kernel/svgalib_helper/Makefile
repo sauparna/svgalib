@@ -4,9 +4,9 @@ SVGALIB_HELPER_MAJOR=209
 svgalib_helper-objs := main.o i810.o interrupt.o virtual.o displaystart.o
 obj-m		:= svgalib_helper.o
 
-ifneq ($(KERNELRELEASE),)
+ifneq ($(S_KERNELRELEASE),)
 
-   VER    ?= $(KERNELRELEASE)
+   VER    ?= $(S_KERNELRELEASE)
    KDIR	:= /lib/modules/$(VER)/build
    PWD	:= $(shell pwd)
    TARGET  := svgalib_helper
